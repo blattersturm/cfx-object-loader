@@ -1,4 +1,5 @@
 local objectSets = {}
+local spawns = {}
 local currentParseName, currentParseResource
 
 function DeleteObject(object)
@@ -50,13 +51,21 @@ local function clearObjectSet(set)
 end
 
 local function registerObjectSpawn(name, pos, heading)
-	TriggerEvent('objectLoader:onSpawnLoaded', {
+	local t = {
 		name = name,
 		filename = currentParseName,
 		owner = currentParseResource,
 		spawnPos = { pos.x, pos.y, pos.z },
 		heading = heading
-	})
+	}
+
+	table.insert(spawns, t)
+
+	TriggerEvent('objectLoader:onSpawnLoaded', t)
+end
+
+function getSpawns()
+	return spawns
 end
 
 local function createObject(data)
@@ -209,6 +218,41 @@ AddEventHandler('onClientResourceStop', function(name)
 	if objectSets[name] then
 		clearObjectSet(objectSets[name])
 	end
+end)
+
+-- mapmanager support
+local mapObjectSets = {}
+local mapObjectSet = 1
+
+AddEventHandler('getMapDirectives', function(add, resource)
+	local function addMap(state, data)
+        local set = parseObjectSet(data)
+
+        Citizen.CreateThread(getSetLoader(set))
+
+        mapObjectSets[mapObjectSet] = set
+        state.set = mapObjectSet
+
+        mapObjectSet = mapObjectSet + 1
+	end
+
+	local function undoMap(state, arg)
+        clearObjectSet(mapObjectSets[state.set])
+        mapObjectSets[state.set] = nil
+    end
+
+    add('object_data', addMap, undoMap)
+
+	if not resource then
+		return
+	end
+
+	-- if no owning resource was specified, don't add the object_file directive
+    add('object_file', function(state, name)
+        local data = LoadResourceFile(resource, name)
+
+        addMap(state, data)
+    end, undoMap)
 end)
 
 function table.merge(t1, t2)
