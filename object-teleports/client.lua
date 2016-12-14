@@ -1,4 +1,4 @@
-local spawns = exports['object-loader']:getSpawns()
+local spawns = {}
 
 local function chatMessage(msg)
 	TriggerEvent('chatMessage', '', {0, 0, 0}, msg)
@@ -13,12 +13,21 @@ local cancelFlag = false
 RegisterNetEvent('objectTeleports:handleTeleportCommand')
 
 AddEventHandler('objectTeleports:handleTeleportCommand', function(command)
+	if #spawns == 0 then
+		spawns = exports['object-loader']:getSpawns()
+	end
+
 	chatMessageYou('/mtp ' .. command)
 
 	if command:len() == 0 then
 		cancelFlag = false
 
 		Citizen.CreateThread(function()
+			if #spawns == 0 then
+				chatMessage('^1No Object Loader Teleports are ^6loaded :(')
+				return
+			end
+
 			chatMessage('^1Object Loader Teleports')
 
 			for i, spawn in ipairs(spawns) do
@@ -49,5 +58,9 @@ AddEventHandler('objectTeleports:handleTeleportCommand', function(command)
 end)
 
 AddEventHandler('objectLoader:onSpawnLoaded', function(data)
+	if #spawns == 0 then
+		spawns = exports['object-loader']:getSpawns()
+	end
+
 	table.insert(spawns, data)
 end)
