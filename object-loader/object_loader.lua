@@ -30,25 +30,55 @@ local function getSetLoader(sets)
 				break
 			end
 		end
-
-		-- spawn objects
-		for _,obj in ipairs(sets) do
-			local o = CreateObjectNoOffset(obj.hash, obj.pos, false --[[ create netobj? ]], false, false)
-
-			SetEntityRotation(o, obj.rot, 2, true)
-			FreezeEntityPosition(o, true)
-
-			obj.object = o
-		end
 	end
 end
 
 local function clearObjectSet(set)
 	for _, obj in ipairs(set) do
-		DeleteObject(obj.object)
+		if obj.object then
+			DeleteObject(obj.object)
+		end
+
 		SetModelAsNoLongerNeeded(obj.hash)
 	end
 end
+
+-- object streamer
+local function isNearObject(p1, obj)
+	local diff = obj.pos - p1
+	local dist = (diff.x * diff.x) + (diff.y * diff.y)
+
+	return (dist < (400 * 400))
+end
+
+Citizen.CreateThread(function()
+	while true do
+		Citizen.Wait(0)
+
+		-- spawn objects
+		local pos = GetEntityCoords(GetPlayerPed(-1))
+
+		for k, sets in pairs(objectSets) do
+			for i, obj in ipairs(sets) do
+				local shouldHave = isNearObject(pos, obj)
+
+				if shouldHave and not obj.object then
+					local o = CreateObjectNoOffset(obj.hash, obj.pos, false --[[ create netobj? ]], false, false)
+
+					if o then
+						SetEntityRotation(o, obj.rot, 2, true)
+						FreezeEntityPosition(o, true)
+
+						obj.object = o
+					end
+				elseif not shouldHave and obj.object then
+					DeleteObject(obj.object)
+					obj.object = nil
+				end
+			end
+		end
+	end
+end)
 
 local function registerObjectSpawn(name, pos, heading)
 	local t = {
