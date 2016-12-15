@@ -53,7 +53,7 @@ end
 
 Citizen.CreateThread(function()
 	while true do
-		Citizen.Wait(0)
+		Citizen.Wait(100)
 
 		-- spawn objects
 		local pos = GetEntityCoords(GetPlayerPed(-1))
@@ -74,6 +74,10 @@ Citizen.CreateThread(function()
 				elseif not shouldHave and obj.object then
 					DeleteObject(obj.object)
 					obj.object = nil
+				end
+
+				if (i % 75) == 0 then
+					Citizen.Wait(15)
 				end
 			end
 		end
