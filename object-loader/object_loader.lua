@@ -63,7 +63,7 @@ Citizen.CreateThread(function()
 				local shouldHave = isNearObject(pos, obj)
 
 				if shouldHave and not obj.object then
-					local o = CreateObjectNoOffset(obj.hash, obj.pos, false --[[ create netobj? ]], false, false)
+					local o = CreateObjectNoOffset(obj.hash, obj.pos, false --[[ create netobj? ]], false, obj.dynamic)
 
 					if o then
 						SetEntityRotation(o, obj.rot, 2, true)
@@ -139,6 +139,7 @@ local function parseMapEditorXml(xml)
 				pos = vector3(tonumber(obj.Position[1].X[1]), tonumber(obj.Position[1].Y[1]), tonumber(obj.Position[1].Z[1])),
 				rot = vector3(tonumber(obj.Rotation[1].X[1]), tonumber(obj.Rotation[1].Y[1]), tonumber(obj.Rotation[1].Z[1])),
 				hash = tonumber(obj.Hash[1])
+				dynamic = (obj.Dynamic[1]=="true" and true or false)
 			}))
 		end
 	end
